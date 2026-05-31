@@ -13,6 +13,8 @@ import OwnerDashboard from "./pages/OwnerDashboard.jsx";
 import FrontOffice from "./pages/FrontOffice.jsx";
 import Kiosk from "./pages/Kiosk.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import Admin from "./pages/Admin.jsx";
+import Redeem from "./pages/Redeem.jsx";
 
 function NotConfigured() {
   return (
@@ -32,7 +34,7 @@ function NotConfigured() {
 }
 
 function ProtectedRoute({ need, children }) {
-  const { user, loading, roleFor, myGyms } = useAuth();
+  const { user, loading, roleFor, myGyms, isAdmin } = useAuth();
   const { gymId } = useGym();
   const loc = useLocation();
   if (loading) return <Spinner label="Checking access…" />;
@@ -40,6 +42,7 @@ function ProtectedRoute({ need, children }) {
   const role = roleFor(gymId);
   const ownsAny = myGyms.some((g) => g.role === "owner");
   const allowed =
+    need === "admin" ? isAdmin :
     need === "owner" ? (role === "owner" || ownsAny || myGyms.length === 0) :
     need === "staff" ? (role === "owner" || role === "front_office" || role === "member") : true;
   if (!allowed) {
@@ -75,6 +78,8 @@ function Shell() {
             <Route path="/front-office" element={<ProtectedRoute need="staff"><FrontOffice /></ProtectedRoute>} />
             <Route path="/kiosk" element={<Kiosk />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/redeem" element={<ProtectedRoute need="auth"><Redeem /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute need="admin"><Admin /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         )}
