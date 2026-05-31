@@ -8,8 +8,16 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [myGyms, setMyGyms] = useState([]); // [{ id, name, role }]
+  const [access, setAccess] = useState({ isAdmin: false, canCreateGym: false });
 
   const user = session?.user || null;
+
+  const loadAccess = useCallback(async (uid) => {
+    if (!supabase || !uid) { setAccess({ isAdmin: false, canCreateGym: false }); return; }
+    const { data } = await supabase.rpc("my_access");
+    const row = data && data.length ? data[0] : null;
+    setAccess({ isAdmin: !!row?.is_admin, canCreateGym: !!row?.can_create_gym });
+  }, []);
 
   const loadGyms = useCallback(async (uid) => {
     if (!supabase || !uid) { setMyGyms([]); return; }
@@ -30,21 +38,23 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
-      if (data.session?.user) loadGyms(data.session.user.id);
+      if (data.session?.user) { loadGyms(data.session.user.id); loadAccess(data.session.user.id); }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (s?.user) loadGyms(s.user.id); else setMyGyms([]);
+      if (s?.user) { loadGyms(s.user.id); loadAccess(s.user.id); } else { setMyGyms([]); setAccess({ isAdmin: false, canCreateGym: false }); }
     });
     return () => sub.subscription.unsubscribe();
-  }, [loadGyms]);
+  }, [loadGyms, loadAccess]);
 
   const roleFor = useCallback((gymId) => myGyms.find((g) => g.id === gymId)?.role || null, [myGyms]);
 
   const value = {
     isConfigured, loading, session, user, myGyms,
+    isAdmin: access.isAdmin, canCreateGym: access.canCreateGym,
     roleFor,
     refreshGyms: () => user && loadGyms(user.id),
+    refreshAccess: () => user && loadAccess(user.id),
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     signUp: (email, password) => supabase.auth.signUp({ email, password }),
     signOut: () => supabase.auth.signOut(),
