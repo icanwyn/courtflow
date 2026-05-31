@@ -194,3 +194,49 @@ export async function revokeAccess(gymId, userId) {
   const { error } = await supabase.from("gym_access").delete().eq("gym_id", gymId).eq("user_id", userId);
   if (error) throw error;
 }
+
+/* ----------------------------- Invites ---------------------------------- */
+export async function redeemInvite(code) {
+  must();
+  const { data, error } = await supabase.rpc("redeem_invite", { p_code: code.trim() });
+  if (error) throw error;
+  return data; // { kind, gym_id?, role?, gym_name? }
+}
+export async function createStaffInvite(gymId, role, maxUses, expires) {
+  must();
+  const { data, error } = await supabase.rpc("create_staff_invite", { p_gym_id: gymId, p_role: role, p_max_uses: maxUses || 1, p_expires: expires || null });
+  if (error) throw error;
+  return data; // code
+}
+export async function listStaffInvites(gymId) {
+  must();
+  const { data, error } = await supabase.rpc("list_staff_invites", { p_gym_id: gymId });
+  if (error) throw error;
+  return data || [];
+}
+export async function revokeInvite(code) {
+  must();
+  const { error } = await supabase.rpc("revoke_invite", { p_code: code });
+  if (error) throw error;
+}
+
+/* --------------------------- Platform admin ----------------------------- */
+export async function createOwnerInvite(maxUses, expires) {
+  must();
+  const { data, error } = await supabase.rpc("create_owner_invite", { p_max_uses: maxUses || 1, p_expires: expires || null });
+  if (error) throw error;
+  return data; // code
+}
+export async function listOwnerInvites() {
+  must();
+  const { data, error } = await supabase.rpc("list_owner_invites");
+  if (error) throw error;
+  return data || [];
+}
+export async function adminOverview() { must(); const { data, error } = await supabase.rpc("admin_overview"); if (error) throw error; return data; }
+export async function adminGyms() { must(); const { data, error } = await supabase.rpc("admin_gyms"); if (error) throw error; return data || []; }
+export async function adminUsers() { must(); const { data, error } = await supabase.rpc("admin_users"); if (error) throw error; return data || []; }
+export async function adminGrantOwner(email) { must(); const { error } = await supabase.rpc("admin_grant_owner", { p_email: email.trim() }); if (error) throw error; }
+export async function adminRevokeOwner(userId) { must(); const { error } = await supabase.rpc("admin_revoke_owner", { p_user_id: userId }); if (error) throw error; }
+export async function adminRemoveGym(gymId) { must(); const { error } = await supabase.rpc("admin_remove_gym", { p_gym_id: gymId }); if (error) throw error; }
+export async function adminDeleteUser(userId) { must(); const { error } = await supabase.rpc("admin_delete_user", { p_user_id: userId }); if (error) throw error; }
