@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   Plus, Trash2, Settings, Crown, RefreshCw, Hourglass, Building2, Check, X,
   Monitor, ScanLine, UserCheck, Sparkles, Timer, Trophy, UserPlus, Zap, Pencil,
-  ChevronRight, LogOut, LogIn,
+  ChevronRight, LogOut, LogIn, ShieldAlert, Ticket,
 } from "lucide-react";
 import { S, GOLD, GOLD_BRIGHT, CREAM, MUTED, DARK, SERIF, MONO, Field } from "./theme.jsx";
 import { SPORTS, groupTag, ordinal, fmtClock, estimateWaitSec } from "./logic";
@@ -14,7 +14,7 @@ import { useGym } from "./GymProvider";
 /* --------------------------------- TopBar -------------------------------- */
 export function TopBar() {
   const { gymId, gyms: ctxGyms, setGymId } = useGym();
-  const { myGyms, user, roleFor, signOut } = useAuth();
+  const { myGyms, user, roleFor, signOut, isAdmin } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -28,6 +28,7 @@ export function TopBar() {
   const tabs = [
     { to: "/", label: "Overview", Icon: Sparkles, show: true, end: true },
     { to: `/dashboard${q}`, label: "Owner Dashboard", Icon: Settings, show: !!user },
+    { to: "/admin", label: "Admin", Icon: ShieldAlert, show: isAdmin },
     { to: `/front-office${q}`, label: "Front Office", Icon: UserCheck, show: isStaff },
     { to: `/kiosk${q}`, label: "Kiosk", Icon: Monitor, show: true },
     { to: `/signup${q}`, label: "Sign-Up", Icon: ScanLine, show: true },
@@ -65,6 +66,12 @@ export function TopBar() {
                     <button className="cf-btn-gold" style={{ ...S.btnGoldSm, width: "100%", justifyContent: "center", marginTop: 8 }}
                       onClick={() => { setOpen(false); nav("/dashboard"); }}>
                       <Plus size={14} /> Manage gyms
+                    </button>
+                  )}
+                  {user && (
+                    <button className="cf-btn-ghost" style={{ ...S.btnGhostSm, width: "100%", justifyContent: "center", marginTop: 8 }}
+                      onClick={() => { setOpen(false); nav("/redeem"); }}>
+                      <Ticket size={14} /> Redeem invite code
                     </button>
                   )}
                 </div>
